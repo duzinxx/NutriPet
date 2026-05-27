@@ -3,7 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 
 const byte SERVO=6, MAIS=4, MENOS=5, SET=2, RESET=3,
-TRINTAMAIS=7, MENOSTRINTA=8;
+TRINTAMAIS=7, TRINTAMENOS=8;
 
 //configurando
 int minutoConfig = 0;
@@ -15,6 +15,8 @@ int segundoAtual = 0;
 
 bool iniciado = false;
 
+String modo;
+
 
 Servo motor;
 LiquidCrystal_I2C tela(0x20, 16, 2);
@@ -22,7 +24,7 @@ LiquidCrystal_I2C tela(0x20, 16, 2);
 void setup()
 {
   Serial.begin(9600);
-  pinMode(MENOSTRINTA, INPUT_PULLUP);
+  pinMode(TRINTAMENOS, INPUT_PULLUP);
   pinMode(TRINTAMAIS, INPUT_PULLUP);
   pinMode(MAIS, INPUT_PULLUP);
   pinMode(MENOS, INPUT_PULLUP);
@@ -92,7 +94,7 @@ void loop()
     horaMais();
     horaMenos();
     trintaMais();
-    //trintaMenos();
+    trintaMenos();
   }
   
   reconfigurar();
@@ -106,25 +108,43 @@ void amostradinho(){
   Serial.print(":");
   Serial.println(segundoAtual);
 
-  tela.clear();
+  //tela.clear();
   tela.setCursor(0,0);
-
+  tela.print("                ");
+  tela.setCursor(0,0);
   tela.print(horaAtual);
   tela.print(":");
 
-  if(minutoAtual < 10) tela.print("0");
-  tela.print(minutoAtual);
-  tela.print(":");
-
-  if(segundoAtual < 10) tela.print("0");
-  tela.print(segundoAtual);
-  
-   if(iniciado){
-     tela.setCursor(0,1);
-    tela.print("Timer rodando");
+  if(minutoAtual < 10) {
+    tela.print("0");
+    tela.print(minutoAtual);
+    tela.print(":");
   } else {
-      tela.setCursor(0,1);
-    tela.print("Configurando");
+    tela.print(minutoAtual);
+    tela.print(":");
+  }
+
+  if(segundoAtual < 10) {
+    tela.print("0");
+    tela.print(segundoAtual);
+  } else {
+    tela.print(segundoAtual);
+  }
+  
+  if(iniciado){
+     tela.setCursor(0,1);
+          
+     if(modo != "Timer rodando"){
+        modo = "Timer rodando";
+        tela.print(modo);
+     }
+  } else {
+     tela.setCursor(0,1);
+           
+     if(modo != "Configurando"){
+       modo = "Configurando";
+       tela.print(modo);
+     }
   }
 }
 
@@ -152,6 +172,20 @@ void trintaMais() {
       minutoAtual = 0;
     }
     
+    amostradinho();
+  }
+}
+
+void trintaMenos() {
+  if(digitalRead(TRINTAMENOS)==0 ){
+    minutoAtual = minutoAtual - 30;
+    
+    if(horaAtual > 0 && minutoAtual == -30){
+      horaAtual--;
+      minutoAtual = 30;
+    } else if(horaAtual == 0 && minutoAtual == -30) {
+      minutoAtual = 0;
+    }
     amostradinho();
   }
 }
